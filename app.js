@@ -1,61 +1,51 @@
-const express = require('express');
-const app = express();
-const path = require('path')
-const fs = require('fs');
-const { json } = require('express');
-
-app.set('views', path.join(__dirname, 'views'))
-app.set('view engine', 'ejs')
-
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views/index.html'))
-})
-
-// document.getElementById("but1").click(console.log(1))
+var createError = require('http-errors');
+var express = require('express');
+var path = require('path');
+var cookieParser = require('cookie-parser');
+var logger = require('morgan');
+const mongoose = require('mongoose');
 
 
+var indexRouter = require('./routes/index');
+var usersRouter = require('./routes/users');
 
-// app.get('/ejs', (req, res) => {
-//     fs.readFile(path.join(__dirname, "public/data.json"), function (err, data) {
-//         if (err) return res.status(400).send("Something went Wrong!!")
-//         console.log(data);
+var app = express();
 
-//         res.render('index.ejs',{
-//                 firstName: "Mohammad",
-//                 lastName: "Mirani",
-//                 skills: ['js', 'html', 'css']
-//             }
-//         )
-//     })
-// })
 
-// app.get('/ejs',(req,res)=>{
-//     fs.readFile(path.join(__dirname,"public/data.json",'utf8',function(err,data){
-//         if(err) return res.status(400).send("Something went wrong!!!")
-//         // console.log(data);
-//         res.render('index.ejs',JSON.parse(data))
-//     }))
-// })
+mongoose.connect(
+    'mongodb://localhost:27017/mak45', {
+        useNewUrlParser: true,
+        useUnifiedTopology: true
+    }
+);
 
-app.get('/ejs', (req, res) => {
+// view engine setup
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'ejs');
 
-    fs.readFile(path.join(__dirname, "public/data.json"), "utf8", function(err, data) {
-        if (err) return res.status(400).send("Something went wrong!!!")
-        
-        res.render('index.ejs', JSON.parse(data))
-    })
+app.use(logger('dev'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+app.use(express.static(path.join(__dirname, 'public')));
 
+app.use('/', indexRouter);
+app.use('/users', usersRouter);
+
+// catch 404 and forward to error handler
+app.use(function(req, res, next) {
+  next(createError(404));
 });
 
+// error handler
+app.use(function(err, req, res, next) {
+  // set locals, only providing error in development
+  res.locals.message = err.message;
+  res.locals.error = req.app.get('env') === 'development' ? err : {};
 
+  // render the error page
+  res.status(err.status || 500);
+  res.render('error');
+});
 
-app.get('/home', (req, res) => {
-    res.render('pages/home')
-})
-
-app.get('/about', (req, res) => {
-    res.render('pages/about')
-})
-
-
-app.listen(5005)
+module.exports = app;
